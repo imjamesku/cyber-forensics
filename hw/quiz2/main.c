@@ -23,12 +23,15 @@ int main()
 		exit(1);
 	}
 
-	int a = 1;
+	r = fp(2);
+	r = fp(2);
+	r = fp(2);
+	r = fp(2);
+	r = fp(2);
+	r = fp(2);
+	r = fp(2);
 	r = fp(2);
 	printf ("%d\n", r);
-	a += 1;
-	printf("%d\n", a);
-	
 	for( i = 0; i < 20; i++ ) {
 		r += r * 1024;
 	}
