@@ -9,3 +9,7 @@ settings.json
 *.out
 *.til
 *.txt
+example
+loadMemory
+reverse
+str2str
