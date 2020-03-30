@@ -16,9 +16,9 @@ using std::string;
 // Global variables
 /* ================================================================== */
 
-UINT64 insCount = 0;     // number of dynamically executed instructions
-UINT64 bblCount = 0;     // number of dynamically executed basic blocks
-UINT64 threadCount = 0;  // total number of threads, including main thread
+UINT64 insCount = 0;    // number of dynamically executed instructions
+UINT64 bblCount = 0;    // number of dynamically executed basic blocks
+UINT64 threadCount = 0; // total number of threads, including main thread
 char buffer[135169];
 
 std::ostream *out = &cerr;
@@ -69,13 +69,17 @@ VOID ThreadStart(THREADID threadIndex, CONTEXT *ctxt, INT32 flags, VOID *v) {
 }
 
 VOID setReg(ADDRINT *regRef, UINT64 val) {
-    fprintf(stderr, "change reg to %lx\n", val);
+    fprintf(stderr, "change reg to %ld\n", val);
     *regRef = val;
 }
 
 VOID loadDump(ADDRINT *rdxRef, ADDRINT *rcxRef) {
     // Remember to change the path accordingly
     FILE *f = fopen("memory-dump/2824-7fffbe15c000-7fffbe17d000.dump", "rb");
+    if (f == NULL) {
+        fprintf(stderr, "fopen failed. Maybe the path is wrong");
+        exit(1);
+    }
     fseek(f, 0, SEEK_END);
     long fsize = ftell(f);
     printf("size: %ld\n", fsize);
@@ -141,11 +145,23 @@ VOID Instruction(INS ins, VOID *v) {
     string insString = INS_Disassemble(ins);
     // fprintf(stderr, "addr:%lx, ins:%s\n", addr, insString.c_str());
 
-    // Locate the stega_encrypt call by the difference between the address of the instruction and the target address
-    if (INS_IsDirectControlFlow(ins) && INS_IsCall(ins) && addr - INS_DirectControlFlowTargetAddress(ins) == 0x4d0) {
+    // Locate the stega_encrypt call by the difference between the address of
+    // the instruction and the target address
+    if (INS_IsDirectControlFlow(ins) && INS_IsCall(ins) &&
+        addr - INS_DirectControlFlowTargetAddress(ins) == 0x4d0) {
         fprintf(stderr, "found addr:%lx, ins:%s\n", addr, insString.c_str());
-        // Insert a callback to load the memory dump file. Do make sure the file path is correct.
-        INS_InsertCall(ins, IPOINT::IPOINT_BEFORE, (AFUNPTR)loadDump, IARG_REG_REFERENCE, REG_DX, IARG_REG_REFERENCE, REG_CX, IARG_END);
+        // Insert a callback to load the memory dump file. Do make sure the file
+        // path is correct.
+        INS_InsertCall(ins, IPOINT::IPOINT_BEFORE, (AFUNPTR)loadDump,
+                       IARG_REG_REFERENCE, REG_RDX, IARG_REG_REFERENCE, REG_RCX,
+                       IARG_END);
+    }
+    if (INS_IsDirectControlFlow(ins) && INS_IsCall(ins) &&
+        addr - INS_DirectControlFlowTargetAddress(ins) == 0x2d6) {
+        // Insert a callback to correct the size parameter
+        fprintf(stderr, "found addr:%lx, ins:%s\n", addr, insString.c_str());
+        INS_InsertCall(ins, IPOINT::IPOINT_BEFORE, (AFUNPTR)setReg,
+                       IARG_REG_REFERENCE, REG_RDI, IARG_UINT64, 51, IARG_END);
     }
 }
 
@@ -180,8 +196,8 @@ int main(int argc, char *argv[]) {
         // PIN_AddSyscallEntryFunction(SyscallEntry, 0);
         // PIN_AddSyscallExitFunction(SyscallExit, 0);
 
-        // Register function to be called for every thread before it starts running
-        // PIN_AddThreadStartFunction(ThreadStart, 0);
+        // Register function to be called for every thread before it starts
+        // running PIN_AddThreadStartFunction(ThreadStart, 0);
 
         // Register function to be called when the application exits
         // PIN_AddFiniFunction(Fini, 0);
