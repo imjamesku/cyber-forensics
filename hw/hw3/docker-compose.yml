@@ -1,0 +1,40 @@
+ 
+version: '3'
+
+services:
+  arch:
+    image: archlinux
+    # volumes:
+    #   - /home/james/git-repos/cyber-forensics/hw/hw3:/root/hw3
+    restart: always
+#   redis:
+#     image: redis
+#     volumes: 
+#       - redis:/data
+#     ports:
+#       - "6379:6379"
+#   web:
+#     build: .
+#     command: python manage.py runserver 0:8000
+#     volumes: 
+#       - .:/code
+#     ports:
+#       - "8000:8000"
+#     depends_on:
+#       - db
+#       - redis
+
+#   web:
+#     build: .
+#     command: "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+#     volumes:
+#       - .:/code
+#     ports:
+#       - "8000:8000"
+#     depends_on:
+#       - db
+
+# volumes:
+#     cf-hw3:
+#         external: 
+#             name: /home/james/git-repos/cyber-forensics/hw/hw3
